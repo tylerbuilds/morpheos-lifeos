@@ -1,0 +1,17 @@
+services:
+  lifeos:
+    build: .
+    restart: unless-stopped
+    environment:
+      LIFEOS_PASSWORD: ${LIFEOS_PASSWORD:?Set a strong password in .env}
+      LIFEOS_ORIGIN: ${LIFEOS_ORIGIN:?Set your public HTTPS origin in .env}
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - lifeos-data:/data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+volumes:
+  lifeos-data:

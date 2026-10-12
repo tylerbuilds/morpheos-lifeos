@@ -1,0 +1,2 @@
+import { defineConfig, devices } from '@playwright/test';
+export default defineConfig({ testDir: './test/browser', fullyParallel: false, workers: 1, reporter: 'list', use: { baseURL: 'http://127.0.0.1:3099', trace: 'retain-on-failure' }, webServer: { command: 'node test/browser-server.mjs', url: 'http://127.0.0.1:3099', reuseExistingServer: false }, projects: [{ name: 'chromium', use: { ...devices['iPhone 13'], defaultBrowserType: 'chromium' } }, { name: 'webkit', use: { ...devices['iPhone 13'] } }] });
