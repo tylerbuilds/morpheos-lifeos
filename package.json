@@ -1,11 +1,13 @@
 {
   "name": "morpheos-lifeos",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "A small, self-hosted home for your digital life. Designed for phones.",
   "license": "MIT",
-  "engines": { "node": ">=24 <27" },
+  "engines": {
+    "node": ">=24.14.0 <25"
+  },
   "scripts": {
     "start": "node server.mjs",
     "demo": "LIFEOS_DEMO=1 node server.mjs",
@@ -13,5 +15,7 @@
     "test:browser": "playwright test",
     "check": "node --check server.mjs && node --check lib/store.mjs && node --check public/app.js"
   },
-  "devDependencies": { "@playwright/test": "1.64.0" }
+  "devDependencies": {
+    "@playwright/test": "1.64.0"
+  }
 }

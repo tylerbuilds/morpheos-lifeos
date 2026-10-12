@@ -1,5 +1,7 @@
 # Self-hosting
 
+For a hosted installation with a reviewable deploy button, start with [the one-click guide](one-click.md). For an agent-assisted installation, use [the setup prompt](agent-setup.md).
+
 LifeOS is a single-user application. Start with the loopback-only quick start in the README. To reach it from a phone, use a trusted HTTPS reverse proxy and set a strong application password.
 
 ## Node and Caddy
@@ -37,11 +39,13 @@ Stop the service before copying the data directory or Docker volume. Back up jou
 For Docker, after `docker compose stop`, an example data export is:
 
 ```sh
-docker compose run --rm --no-deps --entrypoint tar lifeos -C /data --exclude=.writer.lock -czf - . > lifeos-data.tar.gz
+docker compose run --rm --no-deps --entrypoint tar lifeos -C /data --exclude='.writer*' -czf - . > lifeos-data.tar.gz
 ```
 
 Keep the previous source commit and a data backup before upgrading. Pull the reviewed version and restart, or rebuild the Docker image. Verify Home, one favourite, editing and the journal. For rollback, stop, restore the previous source and data copy, then restart. Never overwrite newer data without reviewing it.
 
-The server removes `.writer.lock` on graceful shutdown. After a crash, verify the old process/container is stopped before removing only that stale lock. A second running writer must never be bypassed. Sessions are in memory; a restart signs devices out.
+Version 0.2 uses Node’s built-in SQLite locking for exclusive writer ownership. The operating system releases that lock after a crash, so a normal restart recovers without deleting anything. Use a local filesystem or Docker volume; shared network filesystems are unsupported. Never delete an active lock or start a second replica.
+
+When upgrading from 0.1, stop the old server first. A legacy `.writer.lock` is treated conservatively: a live or uncertain owner blocks startup. If recovery is required, verify the old process/container is stopped before moving only that legacy marker to a recovery location. Do not remove the new `.writer-lock.sqlite` files while any instance is running. Sessions are in memory; a restart signs devices out.
 
 Restore into an isolated copy first. Start it on loopback with the same Node major version and a different port, inspect the saved links and notes, and test an edit before replacing your main instance.

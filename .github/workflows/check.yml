@@ -14,6 +14,7 @@ jobs:
           cache: npm
       - run: npm ci --include=dev
       - run: npm run check && npm test
+      - run: npm audit --include=dev --audit-level=low
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run test:browser
       - run: docker build -t lifeos-test .

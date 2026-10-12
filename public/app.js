@@ -15,7 +15,10 @@ function notify(message) { $('#status').textContent = message; setTimeout(() => 
 async function request(path, options = {}) {
   const response = await fetch(path, { ...options, headers: { 'Content-Type': 'application/json', ...options.headers } });
   const value = await response.json();
-  if (!response.ok) { if (response.status === 401) login(); throw new Error(value.error || 'Something went wrong. Try again.'); }
+  if (!response.ok) {
+    if (response.status === 401) { data = null; $('#editor').close(); $('#brand').textContent = 'LifeOS'; document.title = 'LifeOS'; login(); }
+    throw Object.assign(new Error(value.error || 'Something went wrong. Try again.'), { status: response.status });
+  }
   return value;
 }
 async function load() {
@@ -61,7 +64,7 @@ function render() {
   } else if (page === 'guide') {
     content += heading('A LITTLE GUIDANCE', 'Find your way.', 'Search how-tos, or find the right place to ask your agent.') + '<input id="guide-search" type="search" aria-label="Search guide" placeholder="Try “iPhone”, “journal” or “agent”…"><div id="guide-results"></div>';
   } else {
-    content += heading('MAKE SPACE', 'Yours to organise.', 'Your setup, your data, your pace.') + `<div class="tiles"><a class="tile" href="#journal"><span class="app-icon">✎</span><span><strong>Dev journal</strong><small>Your dated weekly entries</small></span><span>→</span></a><a class="tile" href="#guide"><span class="app-icon">◎</span><span><strong>Help & setup</strong><small>Phone access, data feeds and backups</small></span><span>→</span></a></div><section class="panel"><h2>Personalise</h2><form id="settings"><label>Dashboard name<input name="name" value="${escape(data.state.name)}" maxlength="60" required></label><label>Timezone<input name="timezone" value="${escape(data.state.timezone)}" required></label><button ${data.demo ? 'disabled' : ''}>Save settings</button></form></section><section class="panel"><h2>Keep a copy</h2><p>Export your links and settings. Your journal and data feeds stay in their own files.</p><div class="actions"><button id="export">Export settings</button><label class="button secondary">Import settings<input id="import" type="file" accept="application/json" ${data.demo ? 'disabled' : ''}></label></div><p class="muted">Exports can contain private addresses. Keep them somewhere safe.</p></section>${data.passwordEnabled ? '<button id="logout" class="quiet">Sign out</button>' : ''}<p class="footnote">Morpheos LifeOS · 0.1.0 · Your server, your data.</p>`;
+    content += heading('MAKE SPACE', 'Yours to organise.', 'Your setup, your data, your pace.') + `<div class="tiles"><a class="tile" href="#journal"><span class="app-icon">✎</span><span><strong>Dev journal</strong><small>Your dated weekly entries</small></span><span>→</span></a><a class="tile" href="#guide"><span class="app-icon">◎</span><span><strong>Help & setup</strong><small>Phone access, data feeds and backups</small></span><span>→</span></a></div><section class="panel"><h2>Personalise</h2><form id="settings"><label>Dashboard name<input name="name" value="${escape(data.state.name)}" maxlength="60" required></label><label>Timezone<input name="timezone" value="${escape(data.state.timezone)}" required></label><button ${data.demo ? 'disabled' : ''}>Save settings</button></form></section><section class="panel"><h2>Keep a copy</h2><p>Export your links and settings. Your journal and data feeds stay in their own files.</p><div class="actions"><button id="export">Export settings</button><label class="button secondary">Import settings<input id="import" type="file" accept="application/json" ${data.demo ? 'disabled' : ''}></label></div><p class="muted">Exports can contain private addresses. Keep them somewhere safe.</p></section>${data.passwordEnabled ? '<button id="logout" class="quiet">Sign out</button>' : ''}<p class="footnote">Morpheos LifeOS · 0.2.0 · Your server, your data.</p>`;
   }
   $('#main').innerHTML = content; bind();
   if (page === 'apps' || page === 'life') renderApps();
@@ -84,7 +87,7 @@ function bind() {
   for (const id of ['setup', 'settings']) $(`#${id}`)?.addEventListener('submit', async event => { event.preventDefault(); const values = new FormData(event.target); try { await save({ ...data.state, name: values.get('name'), timezone: values.get('timezone'), onboarded: true }); render(); notify('Saved.'); } catch (error) { notify(error.message); } });
   $('#export')?.addEventListener('click', () => { const url = URL.createObjectURL(new Blob([JSON.stringify(data.state, null, 2)], { type: 'application/json' })); const link = document.createElement('a'); link.href = url; link.download = 'lifeos-settings.json'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); });
   $('#import')?.addEventListener('change', async event => { const file = event.target.files[0]; if (!file) return; try { if (file.size > 100_000) throw new Error('That file is too large.'); const value = JSON.parse(await file.text()); if (!confirm('Replace your current settings with this file? A server backup will be kept.')) return; await save(value); render(); notify('Settings imported.'); } catch (error) { notify(error.message); } });
-  $('#logout')?.addEventListener('click', async () => { await request('/api/logout', { method: 'POST', body: '{}' }); data = null; login(); });
+  $('#logout')?.addEventListener('click', async () => { try { await request('/api/logout', { method: 'POST', body: '{}' }); data = null; $('#brand').textContent = 'LifeOS'; document.title = 'LifeOS'; login(); } catch (error) { notify(error.message); } });
 }
 function openEditor() {
   let draft = structuredClone(data.state); const dialog = $('#editor');
@@ -95,7 +98,23 @@ function openEditor() {
     $('#add').onclick = () => { capture(); draft.links.push({ id: crypto.randomUUID(), label: '', url: '', detail: '', section: page === 'life' ? 'Life' : 'Other', favourite: true, hidden: false }); draw(); dialog.querySelector('fieldset:last-child input').focus(); };
     for (const direction of ['up', 'down']) dialog.querySelectorAll(`[data-${direction}]`).forEach(button => button.onclick = () => { capture(); const index = Number(button.dataset[direction]), next = index + (direction === 'up' ? -1 : 1); [draft.links[index], draft.links[next]] = [draft.links[next], draft.links[index]]; draw(); });
     dialog.querySelectorAll('[data-delete]').forEach(button => button.onclick = () => { capture(); draft.links.splice(Number(button.dataset.delete), 1); draw(); });
-    $('#links-form').onsubmit = async event => { event.preventDefault(); capture(); $('#save-links').disabled = true; try { await save(draft); dialog.close(); render(); notify('Your apps are organised.'); } catch (error) { $('#editor-error').textContent = error.message; $('#save-links').disabled = false; } };
+    $('#links-form').onsubmit = async event => {
+      event.preventDefault(); capture(); $('#save-links').disabled = true;
+      try { await save(draft); dialog.close(); render(); notify('Your apps are organised.'); }
+      catch (error) {
+        $('#editor-error').textContent = error.message; $('#save-links').disabled = false;
+        if (error.status === 409) {
+          const reload = document.createElement('button'); reload.type = 'button'; reload.textContent = 'Reload saved links';
+          reload.onclick = async () => {
+            if (!confirm('Discard these unsaved edits and load the latest saved links?')) return;
+            reload.disabled = true;
+            try { data = await request('/api/dashboard'); draft = structuredClone(data.state); draw(); }
+            catch (failure) { $('#editor-error').textContent = failure.message; reload.disabled = false; }
+          };
+          $('#editor-error').append(document.createElement('br'), reload);
+        }
+      }
+    };
   }
   draw(); dialog.showModal();
 }
@@ -106,5 +125,5 @@ function login() {
 let theme = 'system'; try { theme = localStorage.getItem('lifeos-theme') || 'system'; } catch {}
 function applyTheme() { document.documentElement.dataset.theme = theme; $('#theme').setAttribute('aria-label', `Colour theme: ${theme}. Change theme`); }
 $('#theme').onclick = () => { theme = ['system', 'light', 'dark'][(['system', 'light', 'dark'].indexOf(theme) + 1) % 3]; try { localStorage.setItem('lifeos-theme', theme); } catch {} applyTheme(); notify(`Theme: ${theme}`); }; applyTheme();
-window.addEventListener('hashchange', () => { page = location.hash.slice(1) || 'home'; query = ''; section = 'All'; if (data) render(); $('#main').focus({ preventScroll: true }); window.scrollTo(0, 0); });
+window.addEventListener('hashchange', () => { if (location.hash === '#main') { $('#main').focus(); return; } page = location.hash.slice(1) || 'home'; query = ''; section = 'All'; if (data) render(); $('#main').focus({ preventScroll: true }); window.scrollTo(0, 0); });
 load();

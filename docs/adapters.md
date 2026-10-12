@@ -21,6 +21,6 @@ This is a format example, not a current reading. `checkedAt` must be a real obse
 
 Use the same format for allowances, costs, service status, pantry reminders or upcoming renewals. This release ships no account connectors: wire a collector you control, with read-only permissions where possible. Never put tokens, private provider responses or signed URLs into the feed. The file is visible to anyone authorised to use your LifeOS.
 
-For a journal, save `YYYY-MM-DD - Title.md` in `data/journal/`, or set `LIFEOS_JOURNAL_DIR` to a vault directory. Frontmatter is omitted; content is rendered as plain text. External symlinks and oversized entries are ignored. Your existing scheduler or agent can write there; LifeOS remains a reader.
+For a journal, save `YYYY-MM-DD - Title.md` in `data/journal/`, or set `LIFEOS_JOURNAL_DIR` to a vault directory. Frontmatter is omitted; content is rendered as plain text. Symlinks, invalid dates and entries larger than 100 kB are ignored. The reader considers at most 10,000 directory entries and displays up to 104 valid dated notes, newest first. Your existing scheduler or agent can write there; LifeOS remains a reader.
 
 Agents can propose changes to the exported settings format. Review and import them through More. Do not give an agent the dashboard password merely to organise links, and preserve whatever approval system you already use for consequential work.

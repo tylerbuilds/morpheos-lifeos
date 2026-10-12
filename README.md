@@ -1,14 +1,31 @@
 # Morpheos LifeOS
 
-A small home for your digital life. Designed for Safari on iPhone, comfortable on a desktop, and self-hosted on your own server.
+**Your apps, useful numbers and weekly journal, together on your phone.**
 
-Your favourite apps, useful numbers, work in progress and weekly journal belong together. LifeOS gives them a quiet, understandable home. It grew from a real personal dashboard; this repository is a clean starter with fresh history and example data.
+LifeOS is a small, self-hosted dashboard designed for Safari and the iPhone Home Screen. Make it yours without needing an AI subscription, a separate database service or provider API keys.
 
-![LifeOS on a phone](docs/phone.png)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/tylerbuilds/morpheos-lifeos)
 
-## Try it
+**Start here:** use the button for a hosted installation, [give your coding agent the setup prompt](docs/agent-setup.md), or [run it on your computer](#run-it-on-your-computer).
 
-Install [Node.js 24 LTS](https://nodejs.org/en/download), then:
+The hosted route needs a Render account and **paid compute plus a persistent disk**. Review the price before approving deployment. It creates a password-protected HTTPS app with storage that survives restarts. See [the three-step hosted setup](docs/one-click.md).
+
+![LifeOS on a phone, using fictional demo data](docs/phone.png)
+
+## Choose where it lives
+
+| Route | What you need | What you get |
+| --- | --- | --- |
+| [One-click hosted setup](docs/one-click.md) | A Render account and approval of its charges | An always-on HTTPS address, generated password and persistent storage |
+| [Agent-assisted setup](docs/agent-setup.md) | A coding agent with access to your computer or server | A checked installation suited to your existing machine and network |
+| [Local quick start](#run-it-on-your-computer) | Git and Node.js 24.14 or newer in the 24.x line | A working dashboard on your computer; no hosting account |
+| [Docker or Node with HTTPS](docs/self-hosting.md) | An existing server and HTTPS route | A persistent installation you operate yourself |
+
+The deploy button opens the provider's review screen; it does not purchase hosting without your approval. LifeOS is open-source and has no licence fee. Your hosting provider can charge for its services.
+
+## Run it on your computer
+
+Install [Node.js 24 LTS](https://nodejs.org/en/download), then run:
 
 ```sh
 git clone https://github.com/tylerbuilds/morpheos-lifeos.git
@@ -16,42 +33,50 @@ cd morpheos-lifeos
 node server.mjs
 ```
 
-Open **http://127.0.0.1:3000**. Choose a name, then add your links in **Apps → Organise**. No install step, database, API key or AI account is required to run the app.
+Open **http://127.0.0.1:3000**. Choose a name, then use **Apps → Organise** to add your links. Stop it with **Ctrl+C**. Starting it again keeps your saved settings.
 
-For a read-only tour with fictional numbers and example destinations:
+No `npm install` is needed to run the app. It initially listens only on your own computer. For phone access, follow [the HTTPS setup](docs/self-hosting.md) or use the hosted button.
+
+For a read-only tour with fictional data, run this instead:
 
 ```sh
-LIFEOS_DEMO=1 node server.mjs
+node --env-file=.env.demo server.mjs
 ```
 
-## What you get
+Demo mode never reads your saved dashboard and disables changes.
 
-- Home with favourites and optional, source-labelled information cards.
-- Searchable apps grouped into Life, Media, Games, Work & websites, Publishing, Projects in progress and Other.
-- Add, rename, reorder, move, favourite and hide links without duplicate destinations.
-- Changes saved on the server, shared across your devices, with conflict checks and recovery copies.
-- A newest-first journal that reads dated Markdown files, including an existing Obsidian folder.
-- Searchable setup and agent guidance with suggested chat categories.
-- Light, dark and system themes, large touch controls, safe-area spacing and a Home Screen manifest.
-- An optional password with 24-hour sessions. No trackers, analytics or external fonts.
+## What belongs here
 
-This first release is a single-user starter. It does not include provider-specific billing integrations, a pantry inventory, a wardrobe database, an AI gateway or an automatic diary generator. You can link to those services and feed their summaries through the documented adapter format.
+- **Home:** favourite apps and optional information cards with a source and freshness time.
+- **Apps:** searchable links across Life, Media, Games, Work & websites, Publishing, Projects in progress and Other.
+- **Organise:** add, rename, reorder, move, favourite or hide a destination. Each link has one home.
+- **Journal:** dated Markdown entries, newest first, including an existing Obsidian folder.
+- **Guide:** searchable help and suggested chat topics for working with your own agent.
+- **More:** settings, private export/import and recovery guidance.
 
-## Use it from your phone
+Changes are saved on the server and shared across your devices. Conflicting edits are rejected rather than silently overwriting another device. Light, dark and system themes, large touch targets and safe-area spacing make it comfortable on a phone.
 
-Follow [the self-hosting guide](docs/self-hosting.md) to put LifeOS behind HTTPS with a password. In Safari, tap **Share → Add to Home Screen**.
+This is a **single-user starter**. Account-specific billing connectors, pantry and wardrobe databases, media servers, AI gateways and diary-writing schedules are not bundled. Link to services you already use, and add summaries through [the optional data adapter format](docs/adapters.md). Missing readings stay missing; they are never presented as zero.
 
-External links open normally: use Safari Back, the browser sheet's Done button where available, or the app switcher after a native-app handoff. LifeOS does not frame third-party apps or inject navigation into them. Physical iPhone behaviour varies with iOS and the destination; browser tests are not a substitute for trying your own links.
+## Put it on your iPhone
 
-## Your data
+1. Open your installation's **HTTPS address** in Safari and sign in.
+2. Tap **Share → Add to Home Screen**.
+3. Open the new icon, add one favourite and try it.
 
-`data/dashboard.json` holds your links and settings. Every edit retains a previous version in `data/backups/`. Export/import is also available under More. An exclusive writer lock prevents two servers from editing the same directory. Do not run multiple replicas against one data folder.
+After opening another service, use Safari Back, the browser sheet's Done control when available, or the app switcher after a native-app handoff. LifeOS does not control another app's navigation. Test your own usual links on your phone; automated browser tests do not prove every physical-device handoff.
 
-Add journal files such as `data/journal/2026-01-11 - A useful week.md`, or set `LIFEOS_JOURNAL_DIR` to an existing directory. Notes are read-only; Markdown is shown as safe plain text. Up to 104 dated entries are displayed, newest first. Refresh to read new files. No recurring job is installed.
+## Keep your data yours
 
-See [data adapters](docs/adapters.md), [backup and upgrades](docs/self-hosting.md#backup-and-upgrades), and [security](SECURITY.md). Runtime files and `.env` are excluded from Git and Docker builds. Exports may contain private addresses; keep them private.
+Your links and preferences live in `data/dashboard.json`; per-edit recovery copies live in `data/backups/`. An exclusive, crash-released lock permits one server per data directory. Your journal is read-only to LifeOS. Keep data on a local filesystem or Docker volume, not a shared network filesystem.
 
-## Development
+Use **More → Export settings** and make a separate backup of your data and journal. Exports can contain private addresses. Keep credentials out of exports and Git. [Back up and restore](docs/self-hosting.md#backup-and-upgrades) before upgrading. Hosted installations use `/var/data/lifeos` and must retain their persistent disk.
+
+Passwords are required for remote access, with 24-hour sessions. There are no trackers, analytics or external fonts. Read [security and its limits](SECURITY.md).
+
+## Make your own version
+
+[Use this GitHub template](https://github.com/new?template_name=morpheos-lifeos&template_owner=tylerbuilds) to create an independent repository. Choose a **private repository** if you plan to keep private configuration alongside your customisations. Runtime data and secrets should stay outside Git regardless of repository visibility.
 
 ```sh
 npm ci --include=dev
@@ -61,6 +86,6 @@ npx playwright install --with-deps chromium webkit
 npm run test:browser
 ```
 
-Runtime: Node built-ins and browser APIs only. Playwright is a development dependency. The automated suite checks authentication, cross-origin rejection, duplicate links, concurrent edits, backups, stale data, journal boundaries and phone layouts in Chromium and WebKit.
+The app uses Node built-ins and browser APIs; Playwright is development-only. CI checks adversarial server cases, persistence, authentication and phone flows in Chromium and WebKit. [The audit scope and remaining limits](docs/audit.md) distinguish tested behaviour from deployment-specific checks.
 
-[Contributing](CONTRIBUTING.md) · [Architecture and provenance](docs/architecture.md) · [MIT licence](LICENSE)
+[Agent setup prompt](docs/agent-setup.md) · [Self-hosting](docs/self-hosting.md) · [Contributing](CONTRIBUTING.md) · [Architecture and provenance](docs/architecture.md) · [MIT licence](LICENSE)

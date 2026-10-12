@@ -1,0 +1,24 @@
+# One-click deployment with persistent private data. Review Render's charges before applying.
+services:
+  - type: web
+    name: lifeos
+    runtime: node
+    plan: 0.5c-512mb
+    numInstances: 1
+    autoDeployTrigger: "off"
+    buildCommand: npm ci --omit=dev && npm run check
+    startCommand: node server.mjs
+    healthCheckPath: /healthz
+    disk:
+      name: lifeos-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: 24.14.0
+      - key: HOST
+        value: 0.0.0.0
+      - key: LIFEOS_DATA_DIR
+        value: /var/data/lifeos
+      - key: LIFEOS_PASSWORD
+        generateValue: true
